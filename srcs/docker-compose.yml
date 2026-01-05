@@ -1,0 +1,24 @@
+services:
+  nginx:
+    container_name: nginx
+    build:
+      context: requirements/nginx 
+      dockerfile: Dockerfile  
+    image: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - inception
+    env_file:
+      - .env
+    restart: always
+
+volumes:
+  wordpress:
+  mariadb:
+
+networks:
+  inception:
+    driver: bridge
