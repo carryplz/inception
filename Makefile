@@ -1,23 +1,13 @@
-NAME = 
-CC = 
-FLAGS = 
-SRCS = 
-RM = rm -rf
-OBJ = $(SRCS:.cpp=.o)
-
-all: $(NAME)
-
-$(NAME): $(OBJ)
-	$(CC) $(FLAGS) $(OBJ) -o $(NAME)
-
-%.o: %.cpp
-	$(CC) $(FLAGS) -c $< -o $@
+all:
+	@mkdir -p /home/injo/data/wordpress
+	@mkdir -p /home/injo/data/mariadb
+	docker-compose -f ./srcs/docker-compose.yaml up --build -d
 
 clean:
-	$(RM) $(OBJ)
+	docker-compose -f ./srcs/docker-compose.yaml down --rmi all -v
 
 fclean: clean
-	$(RM) $(NAME)
+	rm -rf /home/injo/data
 
 re:
 	$(MAKE) fclean
