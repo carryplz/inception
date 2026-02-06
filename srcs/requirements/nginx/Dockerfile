@@ -1,4 +1,4 @@
-FROM alpine:3.19
+FROM debian:bookworm
 
 # 패키지 설치 (nginx, openssl)
 RUN apk update && apk add --no-cache nginx openssl
