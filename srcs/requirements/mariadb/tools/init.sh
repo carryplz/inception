@@ -1,39 +1,41 @@
 #!/bin/bash
-
 set -e
 
 echo "MariaDB starting..."
+
+# 1. 로그 디렉토리 권한 확인 (없으면 생성)
+mkdir -p /var/log/mysql
+chown -R mysql:mysql /var/log/mysql
+
+# 2. MariaDB 백그라운드 실행
 mysqld_safe --datadir='/var/lib/mysql' &
 
-# DB가 응답할 때까지 대기
-until mysqladmin ping >/dev/null 2>&1; do
-    echo "Waiting for MariaDB..."
+# 3. MariaDB 준비 대기 (사용자명 -u root 추가)
+# 핑이 성공할 때까지 대기합니다.
+until mysqladmin -u root ping >/dev/null 2>&1; do
+    echo "Waiting for MariaDB to be ready..."
     sleep 2
 done
 
-# 최초 실행 시 (데이터베이스 폴더가 없을 때) 초기화 진행
-if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
-    echo "Initializing MariaDB for the first time..."
+echo "MariaDB is ready. Starting configuration..."
 
-    # 1. 루트 비밀번호 설정 및 DB/유저 생성
-    # 처음에는 비밀번호 없이 접속 시도 후, 루트 비번 변경과 유저 생성을 한 번에 처리
+# 4. 데이터베이스 및 유저 생성
+if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
     mysql -u root << EOF
-FLUSH PRIVILEGES;
-CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
+CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';
+GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;
 EOF
-    echo "Database and user created successfully."
+    echo "Database and user created."
 else
     echo "Database already exists."
 fi
 
-# 설정을 마친 후 안전하게 셧다운
-# 이때부터는 설정된 루트 비밀번호가 필요함
+# 5. 설정 완료 후 임시 프로세스 종료
 mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
 
 echo "MariaDB restarting in foreground..."
+# 6. 포그라운드 실행
 exec mysqld
-
