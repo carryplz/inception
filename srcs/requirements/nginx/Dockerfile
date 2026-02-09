@@ -1,7 +1,11 @@
 FROM debian:bookworm
 
 # 패키지 설치 (nginx, openssl)
-RUN apk update && apk add --no-cache nginx openssl
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y nginx openssl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # SSL 인증서 생성 (과제 요구사항: TLSv1.2/1.3)
 # -x509: Self-signed 인증서 생성
@@ -16,8 +20,13 @@ RUN mkdir -p /etc/nginx/ssl && \
     -out /etc/nginx/ssl/inception.crt \
     -subj "/C=KR/ST=Seoul/L=Seoul/O=42Seoul/OU=Inception/CN=injo.42.fr"
 
-# NGINX 설정 복사 (설정 파일은 나중에 만들 예정)
-COPY conf/nginx.conf /etc/nginx/http.d/default.conf
+RUN mkdir -p /var/www/html && \
+    chown -R www-data:www-data /var/www/html
+
+# NGINX 설정 복사 
+COPY conf/nginx.conf /etc/nginx/sites-available/default
+
+RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # NGINX 실행 (foreground 모드 필수!)
 CMD ["nginx", "-g", "daemon off;"]
