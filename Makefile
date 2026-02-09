@@ -7,7 +7,7 @@ clean:
 	docker-compose -f ./srcs/docker-compose.yaml down --rmi all -v
 
 fclean: clean
-	sudo rm -rf /home/injo/data
+	docker run --rm -v /home/injo:/home/injo alpine rm -rf /home/injo/data
 
 re:
 	$(MAKE) fclean
