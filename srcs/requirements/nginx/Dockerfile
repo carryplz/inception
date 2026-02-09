@@ -26,7 +26,7 @@ RUN mkdir -p /var/www/html && \
 # NGINX 설정 복사 
 COPY conf/nginx.conf /etc/nginx/sites-available/default
 
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # NGINX 실행 (foreground 모드 필수!)
 CMD ["nginx", "-g", "daemon off;"]
