@@ -8,7 +8,7 @@ mysqld_safe --datadir='/var/lib/mysql' &
 
 until mysqladmin ping >/dev/null 2>&1; do
     echo "Waiting for MariaDB..."
-    sleep 10
+    sleep 2
 done
 
 echo "MariaDB is ready."
