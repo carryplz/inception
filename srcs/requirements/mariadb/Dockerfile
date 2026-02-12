@@ -19,4 +19,8 @@ RUN mkdir -p /var/run/mysqld && \
     chown -R mysql:mysql /var/run/mysqld && \
     chmod 777 /var/run/mysqld
 
+# 로그 디렉토리 생성 (mariadb.cnf에서 log_error 경로 사용)
+RUN mkdir -p /var/log/mysql && \
+    chown -R mysql:mysql /var/log/mysql
+
 CMD ["/usr/local/bin/init.sh"]

@@ -20,3 +20,6 @@ log_error = /var/log/mysql/error.log
 # 성능 최적화
 skip-host-cache
 skip-name-resolve
+
+[client]
+socket = /var/run/mysqld/mysqld.socket
