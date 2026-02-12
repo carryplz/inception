@@ -2,7 +2,7 @@ services:
   mariadb:
     container_name: mariadb
     build:
-      context: ./requirements/mariadb 
+      context: ./requirements/mariadb
       dockerfile: Dockerfile
     image: mariadb:injo
     volumes:
@@ -11,6 +11,9 @@ services:
       - inception
     env_file:
       - .env
+    secrets:
+      - db_root_password
+      - db_password
     restart: always
 
   wordpress:
@@ -27,12 +30,16 @@ services:
       - inception
     env_file:
       - .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
     restart: always
-  
+
   nginx:
     container_name: nginx
     build:
-      context: ./requirements/nginx 
+      context: ./requirements/nginx
       dockerfile: Dockerfile
     image: nginx:injo
     depends_on:
@@ -46,6 +53,16 @@ services:
     env_file:
       - .env
     restart: always
+
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_pw.txt
+  db_password:
+    file: ../secrets/db_pw.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_pw.txt
+  wp_user_password:
+    file: ../secrets/wp_user_pw.txt
 
 volumes:
   wordpress:

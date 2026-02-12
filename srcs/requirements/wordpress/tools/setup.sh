@@ -2,6 +2,10 @@
 
 set -e
 
+MYSQL_PASSWORD=$(cat /run/secrets/db_password)
+WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
+WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password)
+
 until mysqladmin ping -h mariadb -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" --silent; do
     echo "Waiting for MariaDB..."
     sleep 2
@@ -10,7 +14,7 @@ done
 if [ ! -f "/var/www/html/wp-config.php" ]; then
     echo "wordpress downloading"
     wp core download --allow-root
-    
+
     wp config create --allow-root \
         --dbname=${MYSQL_DATABASE} \
         --dbuser=${MYSQL_USER} \
