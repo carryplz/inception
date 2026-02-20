@@ -1,13 +1,14 @@
 all:
 	@mkdir -p /home/injo/data/wordpress
 	@mkdir -p /home/injo/data/mariadb
+	@chmod -R 777 /home/injo/data
 	docker-compose -f ./srcs/docker-compose.yaml up --build -d
 
 clean:
 	docker-compose -f ./srcs/docker-compose.yaml down --rmi all -v
 
 fclean: clean
-	docker run --rm -v /home/injo:/home/injo alpine rm -rf /home/injo/data
+	rm -rf /home/injo/data
 
 re:
 	$(MAKE) fclean
