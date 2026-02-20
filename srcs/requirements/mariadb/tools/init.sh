@@ -7,7 +7,6 @@ MYSQL_PASSWORD=$(cat /run/secrets/db_password)
 
 echo "MariaDB start"
 
-# 시스템 DB가 없으면 초기화
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing MariaDB data directory..."
     mysql_install_db --user=mysql --datadir=/var/lib/mysql
@@ -35,7 +34,7 @@ else
     echo "Database already exists"
 fi
 
-mysqladmin -u root --socket=/var/run/mysqld/mysqld.sock shutdown
+mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" --socket=/var/run/mysqld/mysqld.sock shutdown
 
 echo "MariaDB restarting in foreground"
 exec mysqld
