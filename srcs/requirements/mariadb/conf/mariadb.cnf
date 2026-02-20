@@ -1,7 +1,7 @@
 [mysqld]
 user = mysql
 pid-file = /var/run/mysqld/mysqld.pid
-socket = /var/run/mysqld/mysqld.socket
+socket = /var/run/mysqld/mysqld.sock
 port = 3306
 basedir = /usr
 datadir = /var/lib/mysql
@@ -22,4 +22,4 @@ skip-host-cache
 skip-name-resolve
 
 [client]
-socket = /var/run/mysqld/mysqld.socket
+socket = /var/run/mysqld/mysqld.sock

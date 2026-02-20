@@ -35,8 +35,7 @@ else
     echo "Database already exists"
 fi
 
-mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown 2>/dev/null || \
-    mysqladmin -u root shutdown 2>/dev/null
+mysqladmin -u root --socket=/var/run/mysqld/mysqld.socket shutdown
 
 echo "MariaDB restarting in foreground"
 exec mysqld
