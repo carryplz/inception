@@ -15,7 +15,7 @@ fi
 
 mysqld_safe --datadir='/var/lib/mysql' &
 
-until mysqladmin ping -u root >/dev/null 2>&1; do
+until mysqladmin ping --socket=/var/run/mysqld/mysqld.sock >/dev/null 2>&1; do
     echo "Waiting for MariaDB..."
     sleep 2
 done
