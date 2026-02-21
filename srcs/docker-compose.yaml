@@ -65,6 +65,19 @@ services:
       - inception
     restart: always
 
+  adminer:
+    container_name: adminer
+    build:
+      context: ./requirements/adminer
+      dockerfile: Dockerfile
+    image: adminer:injo
+    depends_on:
+      - mariadb
+    ports:
+      - "8080:8080"
+    networks:
+      - inception
+    restart: always
 
 secrets:
   db_root_password:
