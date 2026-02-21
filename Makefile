@@ -1,13 +1,20 @@
-all:
-	@mkdir -p /home/injo/data/wordpress
-	@mkdir -p /home/injo/data/mariadb
-	docker-compose -f ./srcs/docker-compose.yaml up --build -d
+NAME = inception
+USER_NAME = $(shell whoami)
+SRCS_DIR = ./srcs
+DOCKER_COMPOSE = docker compose -f $(SRCS_DIR)/docker-compose.yaml
+
+all: $(NAME)
+
+$(NAME):
+	@mkdir -p /home/$(USER_NAME)/data/wordpress
+	@mkdir -p /home/$(USER_NAME)/data/mariadb
+	$(DOCKER_COMPOSE) up --build -d
 
 clean:
-	docker-compose -f ./srcs/docker-compose.yaml down --rmi all -v
+	$(DOCKER_COMPOSE) down --rmi all -v
 
 fclean: clean
-	docker run --rm -v /home/injo:/home/injo alpine:3.18 rm -rf /home/injo/data
+	@sudo rm -rf /home/$(USER_NAME)/data
 
 re:
 	$(MAKE) fclean
