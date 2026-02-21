@@ -90,3 +90,14 @@ docker exec -it mariadb mysql -u injo -p
 USE wordpress;
 SHOW TABLES;
 ```
+### TLS 버전 확인
+```
+TLSv1.3 허용 여부 확인
+openssl s_client -connect injo.42.fr:443 -tls1_3
+
+TLSv1.2 허용 여부 확인
+openssl s_client -connect injo.42.fr:443 -tls1_2
+
+TLSv1.1 차단 여부 확인 - 에러 발생
+openssl s_client -connect injo.42.fr:443 -tls1_1
+```

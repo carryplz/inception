@@ -90,3 +90,15 @@ docker exec -it mariadb mysql -u injo -p
 USE wordpress;
 SHOW TABLES;
 ```
+
+### TLS Version Check
+```bash
+# TLSv1.3 — should succeed
+openssl s_client -connect injo.42.fr:443 -tls1_3
+
+# TLSv1.2 — should succeed
+openssl s_client -connect injo.42.fr:443 -tls1_2
+
+# TLSv1.1 — should fail (handshake failure)
+openssl s_client -connect injo.42.fr:443 -tls1_1
+```
