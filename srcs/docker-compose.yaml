@@ -24,6 +24,7 @@ services:
     image: wordpress:injo
     depends_on:
       - mariadb
+      - redis
     volumes:
       - wordpress:/var/www/html
     networks:
@@ -53,6 +54,17 @@ services:
     env_file:
       - .env
     restart: always
+
+  redis:
+    container_name: redis
+    build:
+      context: ./requirements/redis
+      dockerfile: Dockerfile
+    image: redis:injo
+    networks:
+      - inception
+    restart: always
+
 
 secrets:
   db_root_password:

@@ -28,7 +28,20 @@ if [ ! -f "/var/www/html/wp-config.php" ]; then
         --admin_password=${WP_ADMIN_PASSWORD} \
         --admin_email=${WP_ADMIN_EMAIL}
 
-    wp user create ${WP_USER_USER} ${WP_USER_EMAIL} --user_pass=${WP_USER_PASSWORD} --role=author --allow-root
+    wp user create ${WP_USER_USER} ${WP_USER_EMAIL} \
+        --user_pass=${WP_USER_PASSWORD} \
+        --role=author \
+        --allow-root
+
+    # Redis 연결 설정
+    wp config set WP_REDIS_HOST redis --allow-root
+    wp config set WP_REDIS_PORT 6379 --allow-root
+
+    # Redis 캐시 플러그인 설치 및 활성화
+    wp plugin install redis-cache --activate --allow-root
+
+    # Redis 캐시 활성화
+    wp redis enable --allow-root
 
     echo "wordpress installation completed!"
 else
