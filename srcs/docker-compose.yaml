@@ -95,6 +95,18 @@ services:
       - inception
     restart: always
     
+    static:
+    container_name: static
+    build:
+      context: ./requirements/static
+      dockerfile: Dockerfile
+    image: static:injo
+    ports:
+      - "80:80"
+    networks:
+      - inception
+    restart: always
+    
 secrets:
   db_root_password:
     file: ../secrets/db_root_pw.txt
