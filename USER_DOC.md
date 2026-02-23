@@ -2,13 +2,25 @@
 
 ## Services Provided
 
-This infrastructure runs three services:
+This infrastructure runs the following services:
+
+**Mandatory:**
 
 | Service | Role | Access |
 |---|---|---|
 | NGINX | HTTPS entry point, reverse proxy | `https://injo.42.fr` |
 | WordPress | Web CMS | `https://injo.42.fr` |
-| MariaDB | Database | Internal only (not directly accessible) |
+| MariaDB | Database | Internal only |
+
+**Bonus:**
+
+| Service | Role | Access |
+|---|---|---|
+| Redis | WordPress cache | Internal only |
+| Adminer | Database management UI | `http://injo.42.fr:8080/adminer.php` |
+| Netdata | System monitoring dashboard | `http://injo.42.fr:19999` |
+| Static website | Introduction page | `http://injo.42.fr` |
+| FTP server | File access to WordPress volume | `ftp injo.42.fr` (port 21) |
 
 ---
 
@@ -53,7 +65,8 @@ secrets/
 ├── db_root_pw.txt      # MariaDB root password
 ├── db_pw.txt           # MariaDB user password
 ├── wp_admin_pw.txt     # WordPress administrator password
-└── wp_user_pw.txt      # WordPress regular user password
+├── wp_user_pw.txt      # WordPress regular user password
+└── ftp_pw.txt          # FTP user password
 ```
 
 Non-sensitive configuration values (domain name, usernames, email addresses) are stored in `srcs/.env`.
@@ -68,20 +81,38 @@ Both `secrets/` and `srcs/.env` are listed in `.gitignore` and are never uploade
 ```bash
 docker ps
 ```
-All three containers — `mariadb`, `wordpress`, and `nginx` — should show status `Up`.
+All 8 containers — `mariadb`, `wordpress`, `nginx`, `redis`, `adminer`, `netdata`, `static`, `ftp` — should show status `Up`.
 
 ### Check logs
 ```bash
 docker logs mariadb
 docker logs wordpress
 docker logs nginx
+docker logs redis
+docker logs adminer
+docker logs netdata
+docker logs static
+docker logs ftp
 ```
 
-### Test HTTPS access from the command line
+### Service access checks
+
 ```bash
+# WordPress (HTTPS)
 curl -k https://injo.42.fr
+
+# Static website (HTTP)
+curl http://injo.42.fr
+
+# Adminer
+curl http://injo.42.fr:8080/adminer.php
+
+# Redis connection status
+docker exec -it wordpress wp redis status --allow-root
+
+# FTP connection test
+ftp injo.42.fr
 ```
-If HTML is returned, the service is working correctly. The `-k` flag ignores the self-signed certificate warning.
 
 ### Connect to MariaDB directly
 ```bash
@@ -89,16 +120,4 @@ docker exec -it mariadb mysql -u injo -p
 # Enter db_pw.txt password when prompted
 USE wordpress;
 SHOW TABLES;
-```
-
-### TLS Version Check
-```bash
-# TLSv1.3 — should succeed
-openssl s_client -connect injo.42.fr:443 -tls1_3
-
-# TLSv1.2 — should succeed
-openssl s_client -connect injo.42.fr:443 -tls1_2
-
-# TLSv1.1 — should fail (handshake failure)
-openssl s_client -connect injo.42.fr:443 -tls1_1
 ```

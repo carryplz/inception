@@ -83,6 +83,9 @@ apt-get install -y sudo
 # 유저에게 sudo 권한 부여 (injo 자리에 본인 유저명 입력)
 usermod -aG sudo injo
 
+# root 나가기
+exit
+
 # 재부팅 후 적용됨
 reboot
 ```
@@ -154,6 +157,7 @@ echo -n "root_비밀번호"  > secrets/db_root_pw.txt
 echo -n "db_비밀번호"    > secrets/db_pw.txt
 echo -n "admin_비밀번호" > secrets/wp_admin_pw.txt
 echo -n "user_비밀번호"  > secrets/wp_user_pw.txt
+echo -n "ftp_비밀번호"   > secrets/ftp_pw.txt
 ```
 
 파일 확인 (줄바꿈 없이 비밀번호만 출력되어야 함):
@@ -174,6 +178,7 @@ WP_ADMIN_USER=in-jo
 WP_ADMIN_EMAIL=in-jo@example.com
 WP_USER_USER=injouser
 WP_USER_EMAIL=injouser@example.com
+FTP_USER=injo
 EOF
 ```
 
@@ -190,6 +195,17 @@ echo "127.0.0.1 injo.42.fr" | sudo tee -a /etc/hosts
 
 # 확인
 grep injo /etc/hosts
+```
+
+## 10-1. 방화벽 포트 설정 (보너스 서비스)
+
+```bash
+sudo ufw allow 80               # 정적 웹사이트
+sudo ufw allow 8080             # Adminer
+sudo ufw allow 19999            # Netdata
+sudo ufw allow 21               # FTP
+sudo ufw allow 21100:21110/tcp  # FTP 패시브 모드
+sudo ufw enable
 ```
 
 ---
@@ -216,16 +232,30 @@ docker ps
 docker logs mariadb
 docker logs wordpress
 docker logs nginx
+docker logs redis
+docker logs adminer
+docker logs netdata
+docker logs static
+docker logs ftp
 docker logs -f mariadb       # 실시간 로그
 
 # 컨테이너 내부 접속
 docker exec -it mariadb bash
 docker exec -it wordpress bash
 docker exec -it nginx bash
+docker exec -it redis bash
+docker exec -it ftp bash
 
 # MariaDB 직접 접속
 docker exec -it mariadb mysql -u root -p
 docker exec -it mariadb mysql -u injo -p wordpress
+
+# Redis 연결 상태 확인
+docker exec -it redis redis-cli ping
+docker exec -it wordpress wp redis status --allow-root
+
+# FTP 접속 테스트
+ftp injo.42.fr
 
 # 중지 (데이터 유지)
 docker-compose -f ./srcs/docker-compose.yaml down

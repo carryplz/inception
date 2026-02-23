@@ -80,8 +80,11 @@ apt-get install -y sudo
 # Grant sudo privileges to your user (replace injo with your username)
 usermod -aG sudo injo
 
-# reboot
-reboot
+# Exit root
+exit
+
+# Log out and log back in for the change to take effect
+logout
 ```
 
 Verify sudo is working:
@@ -151,6 +154,7 @@ echo -n "your_root_password"  > secrets/db_root_pw.txt
 echo -n "your_db_password"    > secrets/db_pw.txt
 echo -n "your_admin_password" > secrets/wp_admin_pw.txt
 echo -n "your_user_password"  > secrets/wp_user_pw.txt
+echo -n "your_ftp_password"   > secrets/ftp_pw.txt
 ```
 
 Verify the files contain only the password (no trailing newline):
@@ -171,6 +175,7 @@ WP_ADMIN_USER=in-jo
 WP_ADMIN_EMAIL=in-jo@example.com
 WP_USER_USER=injouser
 WP_USER_EMAIL=injouser@example.com
+FTP_USER=injo
 EOF
 ```
 
@@ -185,6 +190,17 @@ echo "127.0.0.1 injo.42.fr" | sudo tee -a /etc/hosts
 
 # Verify
 grep injo /etc/hosts
+```
+
+## 10-1. Open Firewall Ports (Bonus services)
+
+```bash
+sudo ufw allow 80        # Static website
+sudo ufw allow 8080      # Adminer
+sudo ufw allow 19999     # Netdata
+sudo ufw allow 21        # FTP
+sudo ufw allow 21100:21110/tcp  # FTP passive mode
+sudo ufw enable
 ```
 
 ---
@@ -214,16 +230,30 @@ docker ps
 docker logs mariadb
 docker logs wordpress
 docker logs nginx
+docker logs redis
+docker logs adminer
+docker logs netdata
+docker logs static
+docker logs ftp
 docker logs -f mariadb       # Follow logs in real time
 
 # Open a shell inside a container
 docker exec -it mariadb bash
 docker exec -it wordpress bash
 docker exec -it nginx bash
+docker exec -it redis bash
+docker exec -it ftp bash
 
 # Connect to MariaDB directly
 docker exec -it mariadb mysql -u root -p
 docker exec -it mariadb mysql -u injo -p wordpress
+
+# Check Redis connection status
+docker exec -it redis redis-cli ping
+docker exec -it wordpress wp redis status --allow-root
+
+# FTP connection test
+ftp injo.42.fr
 
 # Stop containers (data preserved)
 docker-compose -f ./srcs/docker-compose.yaml down

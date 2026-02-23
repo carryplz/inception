@@ -1,38 +1,45 @@
 # Inception
 
-*이 프로젝트는 injo가 42 커리큘럼의 일환으로 제작하였습니다.*
+*This project has been created as part of the 42 curriculum by injo.*
 
 ## 설명 (Description)
 
-이 프로젝트는 Docker Compose를 사용하여 가상 머신(VM) 내에서 소규모 웹 인프라를 구축합니다. NGINX, WordPress(PHP-FPM 포함), MariaDB 각각이 독립된 컨테이너로 실행되며, 격리된 전용 Docker 네트워크를 통해 통신합니다.
+이 프로젝트는 Docker Compose를 사용하여 가상 머신(VM) 내에서 소규모 웹 인프라를 구축합니다.
 
-단순히 컨테이너를 실행하는 것을 넘어, 직접 Dockerfile을 작성하여 이미지를 빌드하고 시스템 관리의 핵심 원칙(보안, 영속성, 네트워크 격리)을 적용하는 것이 목표입니다.
+Mandatory 파트는 NGINX, WordPress(PHP-FPM 포함), MariaDB로 구성되며, Bonus 파트로 Redis 캐시, Adminer, Netdata, 정적 웹사이트, FTP 서버를 추가로 구현합니다. 모든 Docker 이미지는 Debian Bookworm 기반의 커스텀 Dockerfile로 빌드합니다.
 
 ### 아키텍처 개요
 
 ```
        [ 외부 클라이언트 ]
                |
-               | HTTPS (443 포트)
-               v
-    +------------------------------------------+
-    |  Docker 네트워크: inception              |
-    |                                          |
-    |  [ NGINX ] --(FastCGI:9000)--> [ WordPress + PHP-FPM ]
-    |  (TLSv1.2/1.3)                       |
-    |                                    (3306 포트)
-    |                                       |
-    |                                       v
-    |                                  [ MariaDB ]
-    +------------------------------------------+
-               |                         |
-         [ Bind Mount ]           [ Bind Mount ]
-    /home/injo/data/wordpress  /home/injo/data/mariadb
+         +-----+------+-------+----------+
+         |     |      |       |          |
+        443   80    8080   19999        21
+         |     |      |       |          |
+         v     v      v       v          v
+       NGINX Static Adminer Netdata     FTP
+         |
+    (FastCGI:9000)
+         v
+  WordPress + PHP-FPM <--6379--> Redis
+         |
+       (3306)
+         v
+       MariaDB
 ```
 
-- **NGINX**: 유일한 외부 진입점. HTTPS(TLSv1.2/1.3)를 처리하고 PHP 요청을 FastCGI로 WordPress에 전달.
-- **WordPress + PHP-FPM**: PHP를 처리하고 WordPress 애플리케이션을 실행. 내부 9000 포트로 대기.
-- **MariaDB**: WordPress 데이터베이스를 저장. Docker 네트워크 내부에서만 접근 가능.
+**Mandatory 서비스:**
+- **NGINX**: 유일한 HTTPS 진입점 (TLSv1.2/1.3, 443 포트). PHP 요청을 FastCGI로 WordPress에 전달.
+- **WordPress + PHP-FPM**: PHP 처리 및 WordPress 실행 (9000 포트, 내부 전용).
+- **MariaDB**: WordPress 데이터베이스 저장 (3306 포트, 내부 전용).
+
+**Bonus 서비스:**
+- **Redis**: WordPress 인메모리 캐시. `redis-cache` 플러그인으로 DB 쿼리를 줄임.
+- **Adminer**: 웹 기반 DB 관리 UI. `http://injo.42.fr:8080/adminer.php`에서 접근.
+- **Netdata**: 실시간 시스템 및 컨테이너 모니터링 대시보드. `http://injo.42.fr:19999`에서 접근.
+- **정적 웹사이트**: 80 포트로 서비스되는 소개 페이지.
+- **FTP 서버**: WordPress 볼륨을 가리키는 vsftpd 컨테이너. `ftp injo.42.fr`으로 접근.
 
 ---
 
@@ -109,6 +116,7 @@ WP_ADMIN_USER=in-jo
 WP_ADMIN_EMAIL=in-jo@example.com
 WP_USER_USER=injouser
 WP_USER_EMAIL=injouser@example.com
+FTP_USER=injo
 ```
 
 3. secrets 파일 생성:
@@ -118,6 +126,7 @@ echo -n "root_비밀번호"  > secrets/db_root_pw.txt
 echo -n "db_비밀번호"    > secrets/db_pw.txt
 echo -n "admin_비밀번호" > secrets/wp_admin_pw.txt
 echo -n "user_비밀번호"  > secrets/wp_user_pw.txt
+echo -n "ftp_비밀번호"   > secrets/ftp_pw.txt
 ```
 
 4. 도메인 등록:
@@ -192,11 +201,14 @@ adminer:
 - [MariaDB Knowledge Base](https://mariadb.com/kb/en/)
 - [PHP-FPM 설정](https://www.php.net/manual/en/install.fpm.configuration.php)
 - [Docker secrets 문서](https://docs.docker.com/engine/swarm/secrets/)
-
+- [Redis cache WordPress 플러그인](https://wordpress.org/plugins/redis-cache/)
+- [Adminer 문서](https://www.adminer.org/)
+- [Netdata 문서](https://learn.netdata.cloud/)
+- [vsftpd 문서](https://security.appspot.com/vsftpd.html)
 
 ### AI 활용 내역
 
-이 프로젝트 진행 과정에서 AI(Claude, Gemini)를 다음과 같이 활용하였습니다:
+이 프로젝트 진행 과정에서 AI(Claude)를 다음과 같이 활용하였습니다:
 
 - **Dockerfile 검토**: 문법 확인, 레이어 최적화, 디렉토리 권한 누락 확인.
 - **스크립트 디버깅**: `init.sh`의 MariaDB 소켓 경로 불일치 및 shutdown 순서 문제 해결, `setup.sh`의 WP-CLI 플래그 및 `exec "$@"` 시그널 전달 확인.

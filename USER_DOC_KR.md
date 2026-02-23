@@ -2,13 +2,23 @@
 
 ## 제공되는 서비스
 
-이 인프라는 다음 세 가지 서비스로 구성됩니다:
+**Mandatory:**
 
 | 서비스 | 역할 | 접근 방법 |
 |---|---|---|
 | NGINX | HTTPS 진입점, 리버스 프록시 | `https://injo.42.fr` |
 | WordPress | 웹사이트 CMS | `https://injo.42.fr` |
-| MariaDB | 데이터베이스 | 내부 전용 (직접 접근 불가) |
+| MariaDB | 데이터베이스 | 내부 전용 |
+
+**Bonus:**
+
+| 서비스 | 역할 | 접근 방법 |
+|---|---|---|
+| Redis | WordPress 캐시 | 내부 전용 |
+| Adminer | DB 관리 웹 UI | `http://injo.42.fr:8080/adminer.php` |
+| Netdata | 시스템 모니터링 대시보드 | `http://injo.42.fr:19999` |
+| 정적 웹사이트 | 소개 페이지 | `http://injo.42.fr` |
+| FTP 서버 | WordPress 볼륨 파일 접근 | `ftp injo.42.fr` (21 포트) |
 
 ---
 
@@ -53,7 +63,8 @@ secrets/
 ├── db_root_pw.txt      # MariaDB root 비밀번호
 ├── db_pw.txt           # MariaDB 일반 유저 비밀번호
 ├── wp_admin_pw.txt     # WordPress 관리자 비밀번호
-└── wp_user_pw.txt      # WordPress 일반 유저 비밀번호
+├── wp_user_pw.txt      # WordPress 일반 유저 비밀번호
+└── ftp_pw.txt          # FTP 유저 비밀번호
 ```
 
 비밀번호가 아닌 설정값(도메인명, 유저명, 이메일 등)은 `srcs/.env`에 저장됩니다.
@@ -68,20 +79,38 @@ secrets/
 ```bash
 docker ps
 ```
-`mariadb`, `wordpress`, `nginx` 세 컨테이너가 모두 `Up` 상태여야 합니다.
+`mariadb`, `wordpress`, `nginx`, `redis`, `adminer`, `netdata`, `static`, `ftp` 8개 컨테이너가 모두 `Up` 상태여야 합니다.
 
 ### 로그 확인
 ```bash
 docker logs mariadb
 docker logs wordpress
 docker logs nginx
+docker logs redis
+docker logs adminer
+docker logs netdata
+docker logs static
+docker logs ftp
 ```
 
-### 웹사이트 접속 확인 (터미널)
+### 서비스별 접속 확인
+
 ```bash
+# WordPress (HTTPS)
 curl -k https://injo.42.fr
+
+# 정적 웹사이트 (HTTP)
+curl http://injo.42.fr
+
+# Adminer
+curl http://injo.42.fr:8080/adminer.php
+
+# Redis 연결 상태
+docker exec -it wordpress wp redis status --allow-root
+
+# FTP 접속 테스트
+ftp injo.42.fr
 ```
-HTML이 출력되면 정상입니다. (`-k` 옵션은 자체 서명 인증서 경고를 무시합니다.)
 
 ### MariaDB 직접 확인
 ```bash
@@ -89,15 +118,4 @@ docker exec -it mariadb mysql -u injo -p
 # db_pw.txt의 비밀번호 입력 후
 USE wordpress;
 SHOW TABLES;
-```
-### TLS 버전 확인
-```
-TLSv1.3 허용 여부 확인
-openssl s_client -connect injo.42.fr:443 -tls1_3
-
-TLSv1.2 허용 여부 확인
-openssl s_client -connect injo.42.fr:443 -tls1_2
-
-TLSv1.1 차단 여부 확인 - 에러 발생
-openssl s_client -connect injo.42.fr:443 -tls1_1
 ```

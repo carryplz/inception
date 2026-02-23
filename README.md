@@ -4,35 +4,42 @@
 
 ## Description
 
-This project sets up a small web infrastructure using Docker Compose inside a Virtual Machine. Each service — NGINX, WordPress (with PHP-FPM), and MariaDB — runs in its own dedicated container and communicates over a private Docker network.
+This project sets up a small web infrastructure using Docker Compose inside a Virtual Machine. Each service runs in its own dedicated container and communicates over a private Docker network.
 
-The goal is to understand system administration fundamentals: container isolation, service orchestration, volume persistence, network configuration, and secure credential management. Rather than using pre-built images, all Docker images are built from custom Dockerfiles based on Debian Bookworm.
+The mandatory part consists of NGINX, WordPress (with PHP-FPM), and MariaDB. The bonus part adds Redis cache, Adminer, Netdata, a static website, and an FTP server. All Docker images are built from custom Dockerfiles based on Debian Bookworm.
 
 ### Architecture Overview
 
 ```
        [ External Client ]
                |
-               | HTTPS (Port 443)
-               v
-    +------------------------------------------+
-    |  Docker Network: inception               |
-    |                                          |
-    |  [ NGINX ] --(FastCGI:9000)--> [ WordPress + PHP-FPM ]
-    |  (TLSv1.2/1.3)                       |
-    |                                    (Port 3306)
-    |                                       |
-    |                                       v
-    |                                  [ MariaDB ]
-    +------------------------------------------+
-               |                         |
-         [ Bind Mount ]           [ Bind Mount ]
-    /home/injo/data/wordpress  /home/injo/data/mariadb
+         +-----+------+-------+----------+
+         |     |      |       |          |
+        443   80    8080   19999        21
+         |     |      |       |          |
+         v     v      v       v          v
+       NGINX Static Adminer Netdata     FTP
+         |
+    (FastCGI:9000)
+         v
+  WordPress + PHP-FPM <--6379--> Redis
+         |
+       (3306)
+         v
+       MariaDB
 ```
 
-- **NGINX**: The sole entry point. Handles HTTPS (TLSv1.2/1.3 only) and forwards PHP requests to WordPress via FastCGI on port 9000.
-- **WordPress + PHP-FPM**: Processes PHP and serves the WordPress application. Listens on port 9000 (internal only).
-- **MariaDB**: Stores the WordPress database. Accessible only within the Docker network on port 3306.
+**Mandatory services:**
+- **NGINX**: The sole HTTPS entry point (TLSv1.2/1.3, port 443). Forwards PHP requests to WordPress via FastCGI.
+- **WordPress + PHP-FPM**: Processes PHP and serves the WordPress application (port 9000, internal only).
+- **MariaDB**: Stores the WordPress database (port 3306, internal only).
+
+**Bonus services:**
+- **Redis**: In-memory cache for WordPress. Reduces database queries via the `redis-cache` plugin.
+- **Adminer**: Web-based database management UI at `http://injo.42.fr:8080/adminer.php`.
+- **Netdata**: Real-time system and container monitoring dashboard at `http://injo.42.fr:19999`.
+- **Static website**: A simple introduction page served via NGINX on port 80.
+- **FTP server**: vsftpd container pointing to the WordPress volume. Access via `ftp injo.42.fr`.
 
 ---
 
@@ -110,6 +117,7 @@ WP_ADMIN_USER=in-jo
 WP_ADMIN_EMAIL=in-jo@example.com
 WP_USER_USER=injouser
 WP_USER_EMAIL=injouser@example.com
+FTP_USER=injo
 ```
 
 3. Create secrets files:
@@ -119,6 +127,7 @@ echo -n "your_root_password"  > secrets/db_root_pw.txt
 echo -n "your_db_password"    > secrets/db_pw.txt
 echo -n "your_admin_password" > secrets/wp_admin_pw.txt
 echo -n "your_user_password"  > secrets/wp_user_pw.txt
+echo -n "your_ftp_password"   > secrets/ftp_pw.txt
 ```
 
 4. Register the domain in `/etc/hosts`:
@@ -154,6 +163,10 @@ make
 - [MariaDB Knowledge Base](https://mariadb.com/kb/en/)
 - [PHP-FPM configuration](https://www.php.net/manual/en/install.fpm.configuration.php)
 - [Docker secrets documentation](https://docs.docker.com/engine/swarm/secrets/)
+- [Redis cache WordPress plugin](https://wordpress.org/plugins/redis-cache/)
+- [Adminer documentation](https://www.adminer.org/)
+- [Netdata documentation](https://learn.netdata.cloud/)
+- [vsftpd documentation](https://security.appspot.com/vsftpd.html)
 
 ### AI Usage
 
