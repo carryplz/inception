@@ -106,6 +106,27 @@ services:
     networks:
       - inception
     restart: always
+  
+  ftp:
+    container_name: ftp
+    build:
+      context: ./requirements/ftp
+      dockerfile: Dockerfile
+    image: ftp:injo
+    depends_on:
+      - wordpress
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - inception
+    env_file:
+      - .env
+    secrets:
+      - ftp_password
+    restart: always
 
 secrets:
   db_root_password:
@@ -116,6 +137,8 @@ secrets:
     file: ../secrets/wp_admin_pw.txt
   wp_user_password:
     file: ../secrets/wp_user_pw.txt
+  ftp_password:
+    file: ../secrets/ftp_pw.txt
 
 volumes:
   wordpress:
