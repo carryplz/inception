@@ -4,14 +4,17 @@ set -e
 
 FTP_PASSWORD=$(cat /run/secrets/ftp_password)
 
-# FTP 유저 생성
-useradd -m -d /var/www/html ${FTP_USER}
-echo "${FTP_USER}:${FTP_PASSWORD}" | chpasswd
+# 디렉토리 생성
+mkdir -p /var/run/vsftpd/empty
 
-# WordPress 볼륨 접근 권한
+# 유저가 없을 때만 생성
+if ! id "${FTP_USER}" &>/dev/null; then
+    useradd -m -d /var/www/html "${FTP_USER}"
+fi
+
+echo "${FTP_USER}:${FTP_PASSWORD}" | chpasswd
 chown -R ${FTP_USER}:${FTP_USER} /var/www/html
 
-# vsftpd 설정
 cat > /etc/vsftpd.conf << EOF
 listen=YES
 listen_ipv6=NO
@@ -25,6 +28,7 @@ local_root=/var/www/html
 pasv_enable=YES
 pasv_min_port=21100
 pasv_max_port=21110
+secure_chroot_dir=/var/run/vsftpd/empty
 EOF
 
 exec vsftpd /etc/vsftpd.conf
