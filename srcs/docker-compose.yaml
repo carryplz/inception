@@ -79,6 +79,22 @@ services:
       - inception
     restart: always
 
+  netdata:
+    container_name: netdata
+    build:
+      context: ./requirements/netdata
+      dockerfile: Dockerfile
+    image: netdata:injo
+    ports:
+      - "19999:19999"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - inception
+    restart: always
+    
 secrets:
   db_root_password:
     file: ../secrets/db_root_pw.txt
