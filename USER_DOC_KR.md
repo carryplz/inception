@@ -7,7 +7,7 @@
 | 서비스 | 역할 | 접근 방법 |
 |---|---|---|
 | NGINX | HTTPS 진입점, 리버스 프록시 | `https://injo.42.fr` |
-| WordPress | 웹사이트 CMS | `https://injo.42.fr` |
+| WordPress | 웹사이트 CMS | `https://injo.42.fr/wp-admin` |
 | MariaDB | 데이터베이스 | 내부 전용 |
 
 **Bonus:**

@@ -9,7 +9,7 @@ This infrastructure runs the following services:
 | Service | Role | Access |
 |---|---|---|
 | NGINX | HTTPS entry point, reverse proxy | `https://injo.42.fr` |
-| WordPress | Web CMS | `https://injo.42.fr` |
+| WordPress | Web CMS | `https://injo.42.fr/wp-admin` |
 | MariaDB | Database | Internal only |
 
 **Bonus:**

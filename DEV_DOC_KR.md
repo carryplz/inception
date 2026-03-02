@@ -83,10 +83,7 @@ apt-get install -y sudo
 # 유저에게 sudo 권한 부여 (injo 자리에 본인 유저명 입력)
 usermod -aG sudo injo
 
-# root 나가기
-exit
-
-# 재부팅 후 적용됨
+# 재부팅
 reboot
 ```
 
@@ -134,10 +131,6 @@ docker-compose --version
 ## 7. 레포지토리 클론
 
 ```bash
-# Git 유저 설정
-git config --global user.name "injo"
-git config --global user.email "injo@student.42seoul.kr"
-
 # 레포지토리 클론
 git clone <레포지토리_URL>
 cd inception
@@ -265,8 +258,17 @@ make clean
 
 # 데이터까지 완전 삭제 후 재시작
 make re
-```
 
+# 포트 설정 확인
+# MariaDB가 어떤 포트에서 대기 중인지 확인
+docker exec -it mariadb mysql -u root -p -e "SHOW VARIABLES LIKE 'port';"
+
+# WordPress의 DB 연결 설정 확인
+docker exec -it wordpress grep DB_HOST /var/www/html/wp-config.php
+
+# 실시간 연결 상태 확인
+docker exec -it wordpress ss -tnp | grep 3306
+```
 ---
 
 ## 데이터 저장 위치 및 영속성

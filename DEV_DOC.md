@@ -80,11 +80,8 @@ apt-get install -y sudo
 # Grant sudo privileges to your user (replace injo with your username)
 usermod -aG sudo injo
 
-# Exit root
-exit
-
-# Log out and log back in for the change to take effect
-logout
+# reboot
+reboot
 ```
 
 Verify sudo is working:
@@ -131,10 +128,6 @@ docker-compose --version
 ## 7. Clone the Repository
 
 ```bash
-# Configure Git identity
-git config --global user.name "injo"
-git config --global user.email "injo@student.42seoul.kr"
-
 # Clone the project
 git clone <repository_url>
 cd inception
@@ -266,6 +259,16 @@ make fclean
 
 # Full reset and rebuild
 make re
+
+# Port Configuration Check
+# Check which port MariaDB is listening on
+docker exec -it mariadb mysql -u root -p -e "SHOW VARIABLES LIKE 'port';"
+
+# Check WordPress DB connection settings
+docker exec -it wordpress grep DB_HOST /var/www/html/wp-config.php
+
+# Check active connections
+docker exec -it wordpress ss -tnp | grep 3306
 ```
 
 ---
